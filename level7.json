@@ -1,0 +1,1 @@
+{"graph": {"nodes": ["A", "B", "C", "D"], "edges": [["A", "B"], ["B", "C"], ["C", "D"], ["D", "A"], ["B", "D"]]}, "pre_colored": {"A": "Red"}, "colors": ["Red", "Green", "Blue"], "start_node": "B", "visibility_radius": 1}

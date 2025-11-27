@@ -1,10 +1,1 @@
-{
-  "graph": {
-    "nodes": ["A", "B", "C", "D", "E"],
-    "edges": [["A","B"], ["B","C"], ["C","D"], ["D","E"], ["E","A"]]
-  },
-  "pre_colored": {"A":"Red"},
-  "colors": ["Red", "Green", "Blue"],
-  "start_node": "B",
-  "visibility_radius": 1
-}
+{"graph": {"nodes": ["A", "B", "C", "D", "E"], "edges": [["A", "B"], ["B", "C"], ["C", "D"], ["D", "E"], ["E", "A"]]}, "pre_colored": {"A": "Red"}, "colors": ["Red", "Green", "Blue"], "start_node": "B", "visibility_radius": 1}

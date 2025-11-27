@@ -2,11 +2,11 @@ import random
 from collections import defaultdict, deque
 import copy
 
-class CSP_AGENT:
-   
+class B22AI039:
+    
 
     def __init__(self, initial_state):
-        self.DEBUG = True # Set to False for final submission
+        self.DEBUG = False
 
         if self.DEBUG: print("Definitive Agent (MAC + Global Explore) initialized.")
 
@@ -19,10 +19,11 @@ class CSP_AGENT:
         self.domains = {}
         self.decision_path = []
         
-        # State Machines
         self.backtracking_mode = False
         self.path_to_target = []
         self.new_graph_info_discovered = False
+
+        self._peek_cache = None
 
         self._update_memory(initial_state)
 
@@ -89,6 +90,30 @@ class CSP_AGENT:
                     queue.append(new_path)
         return None
 
+    def _peek_best_color(self, node_to_color):
+        neighbor_colors = {self.assignments[n] for n in self.graph.get(node_to_color, []) if n in self.assignments}
+        node_domain = self.domains.get(node_to_color, set(self.colors))
+        legal_colors = sorted(list(node_domain - neighbor_colors))
+        
+        if not legal_colors:
+            return None, None
+
+        color_damages = []
+        for color in legal_colors:
+            temp_domains = copy.deepcopy(self.domains)
+            temp_domains[node_to_color] = {color}
+            is_consistent, pruned = self._arc_consistency(temp_domains, source_node=node_to_color)
+            if not is_consistent: continue
+            damage = sum(max(0, len(self.domains.get(n, set())) - len(pruned.get(n, set()))) for n in self.all_nodes if n not in self.assignments)
+            color_damages.append((damage, color, pruned))
+
+        if not color_damages:
+            return None, None
+
+        color_damages.sort(key=lambda x: x[0])
+        _, best_color, best_pruned = color_damages[0]
+        return best_color, best_pruned
+
     def get_next_move(self, visible_state):
         self._update_memory(visible_state)
         current_node = visible_state['current_node']
@@ -97,12 +122,14 @@ class CSP_AGENT:
             next_step = self.path_to_target.pop(0)
             return {'action': 'move', 'node': next_step}
 
+        # If new information discovered, run AC and update domains
         if self.new_graph_info_discovered:
             consistent, pruned = self._arc_consistency(self.domains)
             if consistent: self.domains = pruned
             else: self.backtracking_mode = True
             self.new_graph_info_discovered = False
 
+        # Backtracking handling remains prioritized
         if self.backtracking_mode:
             if not self.decision_path: return {'action': 'move', 'node': current_node}
             last_node, _, old_domains = self.decision_path.pop()
@@ -124,6 +151,17 @@ class CSP_AGENT:
                 self.backtracking_mode = True
                 return {'action': 'move', 'node': current_node}
 
+
+        if current_node not in self.assignments:
+            best_color, best_pruned = self._peek_best_color(current_node)
+            if best_color is not None:
+        
+                domains_snapshot = copy.deepcopy(self.domains)
+                self._peek_cache = (current_node, best_color, best_pruned, domains_snapshot)
+  
+                return {'action': 'move', 'node': current_node}
+
+        # Continue with exploration / movement selection
         uncolored_visible = [n for n in visible_state['visible_graph']['nodes'] if n not in self.assignments]
         if uncolored_visible:
             uncolored_visible.sort()
@@ -149,6 +187,16 @@ class CSP_AGENT:
         return {'action': 'move', 'node': current_node}
 
     def get_color_for_node(self, node_to_color, visible_state):
+        # recomputing or calling _update_memory again.
+        if self._peek_cache and self._peek_cache[0] == node_to_color:
+            _, best_color, best_pruned, domains_snapshot = self._peek_cache
+            self.decision_path.append((node_to_color, best_color, domains_snapshot))
+            self.domains = best_pruned
+            self.assignments[node_to_color] = best_color
+            self._peek_cache = None
+            return {'action': 'color', 'node': node_to_color, 'color': best_color}
+
+        # Otherwise proceed with the original, safe destructive path
         self._update_memory(visible_state)
         
         neighbor_colors = {self.assignments[n] for n in self.graph.get(node_to_color, []) if n in self.assignments}

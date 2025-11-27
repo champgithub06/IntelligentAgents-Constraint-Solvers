@@ -1,6 +1,6 @@
 import json
 from game_engine import GraphColoringGame
-from student_template import CSP_AGENT 
+from B22AI039 import B22AI039 
 
 class GameRunner:
     """
@@ -94,14 +94,10 @@ class GameRunner:
 
 if __name__ == "__main__":
     level_file = "level1.json"
-    level_data = {
-      "graph": {"nodes": ["A","B","C","D","E"], "edges": [["A","B"],["B","C"],["C","D"],["D","E"],["E","A"],["A","C"]]},
-      "pre_colored": {}, "colors": ["Red", "Green", "Blue"],
-      "start_node": "A", "visibility_radius": 1
-    }
+    level_data ={"graph": {"nodes": ["A", "B", "C", "D", "E"], "edges": [["A", "B"], ["B", "C"], ["C", "D"], ["D", "E"], ["E", "A"]]}, "pre_colored": {"A": "Red"}, "colors": ["Red", "Green", "Blue"], "start_node": "B", "visibility_radius": 1}
     with open(level_file, 'w') as f: json.dump(level_data, f)
 
-    runner = GameRunner(level_file, CSP_AGENT)
+    runner = GameRunner(level_file, B22AI039)
     final_summary = runner.run_game()
 
     print("\n" + "="*20 + " FINAL SUMMARY " + "="*20)
